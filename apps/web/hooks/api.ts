@@ -33,6 +33,12 @@ export const useOverview = () =>
   useQuery({ queryKey: ["overview"], queryFn: dashboardApi.overview, refetchInterval: 30_000 })
 export const useMessageStats = (days = 14) =>
   useQuery({ queryKey: ["message-stats", days], queryFn: () => dashboardApi.messageStats(days) })
+export const useBotStats = (days = 30) =>
+  useQuery({ queryKey: ["bot-stats", days], queryFn: () => dashboardApi.botStats(days) })
+export const useStatusBreakdown = () =>
+  useQuery({ queryKey: ["status-breakdown"], queryFn: dashboardApi.statusBreakdown, refetchInterval: 60_000 })
+export const useHourlyActivity = (days = 30) =>
+  useQuery({ queryKey: ["hourly-activity", days], queryFn: () => dashboardApi.hourlyActivity(days) })
 
 // --- Bots ---
 export const useBots = (params?: Params) =>

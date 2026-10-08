@@ -8,10 +8,12 @@ import type {
   Automation,
   AutomationRun,
   Bot,
+  BotStatPoint,
   BotStatus,
   Contact,
   Conversation,
   DashboardOverview,
+  HourlyPoint,
   Membership,
   Message,
   MessageStatPoint,
@@ -20,6 +22,7 @@ import type {
   Paginated,
   Plan,
   QRPayload,
+  StatusBreakdown,
   Subscription,
   Webhook,
   WebhookDelivery,
@@ -157,6 +160,11 @@ export const dashboardApi = {
   overview: () => api<DashboardOverview>("/dashboard/overview/"),
   messageStats: (days = 14) =>
     api<MessageStatPoint[]>("/dashboard/message-stats/", { params: { days } }),
+  botStats: (days = 30) =>
+    api<BotStatPoint[]>("/dashboard/bot-stats/", { params: { days } }),
+  statusBreakdown: () => api<StatusBreakdown>("/dashboard/status-breakdown/"),
+  hourlyActivity: (days = 30) =>
+    api<HourlyPoint[]>("/dashboard/hourly-activity/", { params: { days } }),
 }
 
 // --- Organizations ---

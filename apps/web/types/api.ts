@@ -303,6 +303,28 @@ export interface MessageStatPoint {
   day: string
   inbound: number
   outbound: number
+  failed?: number
+}
+
+export interface BotStatPoint {
+  bot_id: string
+  bot: string
+  inbound: number
+  outbound: number
+  delivered: number
+  failed: number
+  total: number
+}
+
+export interface StatusBreakdown {
+  messages: Record<string, number>
+  conversations: Record<string, number>
+}
+
+export interface HourlyPoint {
+  hour: number
+  inbound: number
+  outbound: number
 }
 
 export interface Plan {
