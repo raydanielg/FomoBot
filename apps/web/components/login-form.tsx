@@ -3,6 +3,9 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { cn } from "cn"
 
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -25,25 +28,45 @@ import {
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
+
+import { useAuth } from "@/lib/auth"
+import { errorMessage } from "@/lib/api/client"
+
+const schema = z.object({
+  email: z.email("Enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+})
+
+type FormValues = z.infer<typeof schema>
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
-  const [isLoading, setIsLoading] = React.useState(false)
+  const { login } = useAuth()
   const [showPassword, setShowPassword] = React.useState(false)
+  const [formError, setFormError] = React.useState<string>()
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (isLoading) return
-    setIsLoading(true)
-    // TODO: wire up real auth
-    setTimeout(() => router.push("/dashboard"), 1500)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({ resolver: zodResolver(schema) })
+
+  async function onSubmit(values: FormValues) {
+    setFormError(undefined)
+    try {
+      await login(values.email, values.password)
+      router.push("/dashboard")
+    } catch (e) {
+      setFormError(errorMessage(e, "Sign in failed. Check your credentials and try again."))
+    }
   }
 
   return (
@@ -56,8 +79,13 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <FieldGroup>
+              {formError && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  {formError}
+                </div>
+              )}
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <div className="relative">
@@ -72,10 +100,12 @@ export function LoginForm({
                     placeholder="you@example.com"
                     className="ps-9"
                     autoComplete="email"
-                    required
-                    disabled={isLoading}
+                    aria-invalid={!!errors.email}
+                    disabled={isSubmitting}
+                    {...register("email")}
                   />
                 </div>
+                {errors.email && <FieldError>{errors.email.message}</FieldError>}
               </Field>
               <Field>
                 <div className="flex items-center">
@@ -99,8 +129,9 @@ export function LoginForm({
                     placeholder="••••••••"
                     className="ps-9 pe-10"
                     autoComplete="current-password"
-                    required
-                    disabled={isLoading}
+                    aria-invalid={!!errors.password}
+                    disabled={isSubmitting}
+                    {...register("password")}
                   />
                   <button
                     type="button"
@@ -115,14 +146,17 @@ export function LoginForm({
                     />
                   </button>
                 </div>
+                {errors.password && (
+                  <FieldError>{errors.password.message}</FieldError>
+                )}
               </Field>
               <Field>
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   className="shadow-lg shadow-primary/25"
                 >
-                  {isLoading ? (
+                  {isSubmitting ? (
                     <>
                       <HugeiconsIcon
                         icon={Loading03Icon}

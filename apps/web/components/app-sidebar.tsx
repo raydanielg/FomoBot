@@ -1,255 +1,157 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
+import { OrgSwitcher } from "@/components/org-switcher"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from "@workspace/ui/components/sidebar"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Home01Icon,
   AnalyticsUpIcon,
-  BubbleChatIcon,
-  RoboticIcon,
-  Megaphone01Icon,
-  WhatsappIcon,
+  InboxIcon,
   Contact01Icon,
+  RoboticIcon,
+  Flowchart01Icon,
+  DocumentCodeIcon,
+  Key01Icon,
+  CodeSquareIcon,
+  WebhookIcon,
+  File01Icon,
+  ApiIcon,
+  GroupIcon,
   Settings05Icon,
   BookOpen02Icon,
   HelpCircleIcon,
-  SentIcon,
   Robot01Icon,
-  Robot02Icon,
-  AiChat01Icon,
 } from "@hugeicons/core-free-icons"
 
-const data = {
-  user: {
-    name: "Ezra",
-    email: "ezra@fomobot.com",
-    avatar: "",
+import { useBots } from "@/hooks/api"
+
+const navMain = [
+  {
+    title: "Overview",
+    url: "/dashboard",
+    icon: <HugeiconsIcon icon={Home01Icon} strokeWidth={2} />,
+    isActive: true,
   },
-  navMain: [
-    {
-      title: "Overview",
-      url: "/dashboard",
-      icon: (
-        <HugeiconsIcon icon={Home01Icon} strokeWidth={2} />
-      ),
-      isActive: true,
-    },
-    {
-      title: "Analytics",
-      url: "/dashboard/analytics",
-      icon: (
-        <HugeiconsIcon icon={AnalyticsUpIcon} strokeWidth={2} />
-      ),
-    },
-    {
-      title: "Conversations",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={BubbleChatIcon} strokeWidth={2} />
-      ),
-      items: [
-        {
-          title: "All chats",
-          url: "#",
-        },
-        {
-          title: "Assigned to me",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Bots",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={RoboticIcon} strokeWidth={2} />
-      ),
-      items: [
-        {
-          title: "All bots",
-          url: "#",
-        },
-        {
-          title: "Flows",
-          url: "#",
-        },
-        {
-          title: "AI settings",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Broadcasts",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={Megaphone01Icon} strokeWidth={2} />
-      ),
-      items: [
-        {
-          title: "Campaigns",
-          url: "#",
-        },
-        {
-          title: "Templates",
-          url: "#",
-        },
-        {
-          title: "Scheduled",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "WhatsApp",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={WhatsappIcon} strokeWidth={2} />
-      ),
-      items: [
-        {
-          title: "Numbers",
-          url: "#",
-        },
-        {
-          title: "Connect device",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Contacts",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={Contact01Icon} strokeWidth={2} />
-      ),
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={Settings05Icon} strokeWidth={2} />
-      ),
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "API keys",
-          url: "#",
-        },
-        {
-          title: "Webhooks",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Docs",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={BookOpen02Icon} strokeWidth={2} />
-      ),
-    },
-    {
-      title: "Support",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} />
-      ),
-    },
-    {
-      title: "Feedback",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={SentIcon} strokeWidth={2} />
-      ),
-    },
-  ],
-  bots: [
-    {
-      name: "Support Bot",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={Robot01Icon} strokeWidth={2} />
-      ),
-    },
-    {
-      name: "Sales Bot",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={Robot02Icon} strokeWidth={2} />
-      ),
-    },
-    {
-      name: "Reminder Bot",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={AiChat01Icon} strokeWidth={2} />
-      ),
-    },
-  ],
-}
+  {
+    title: "Analytics",
+    url: "/dashboard/analytics",
+    icon: <HugeiconsIcon icon={AnalyticsUpIcon} strokeWidth={2} />,
+  },
+  {
+    title: "Inbox",
+    url: "/dashboard/inbox",
+    icon: <HugeiconsIcon icon={InboxIcon} strokeWidth={2} />,
+  },
+  {
+    title: "Contacts",
+    url: "/dashboard/contacts",
+    icon: <HugeiconsIcon icon={Contact01Icon} strokeWidth={2} />,
+  },
+]
+
+const navProduct = [
+  {
+    title: "Bots",
+    url: "/dashboard/bots",
+    icon: <HugeiconsIcon icon={RoboticIcon} strokeWidth={2} />,
+  },
+  {
+    title: "Automations",
+    url: "/dashboard/automations",
+    icon: <HugeiconsIcon icon={Flowchart01Icon} strokeWidth={2} />,
+  },
+  {
+    title: "Templates",
+    url: "/dashboard/templates",
+    icon: <HugeiconsIcon icon={DocumentCodeIcon} strokeWidth={2} />,
+  },
+]
+
+const navDeveloper = [
+  {
+    title: "API Keys",
+    url: "/dashboard/api/keys",
+    icon: <HugeiconsIcon icon={Key01Icon} strokeWidth={2} />,
+  },
+  {
+    title: "API Playground",
+    url: "/dashboard/api/playground",
+    icon: <HugeiconsIcon icon={CodeSquareIcon} strokeWidth={2} />,
+  },
+  {
+    title: "Webhooks",
+    url: "/dashboard/webhooks",
+    icon: <HugeiconsIcon icon={WebhookIcon} strokeWidth={2} />,
+  },
+  {
+    title: "Logs",
+    url: "/dashboard/logs",
+    icon: <HugeiconsIcon icon={File01Icon} strokeWidth={2} />,
+  },
+  {
+    title: "Documentation",
+    url: "/dashboard/api/docs",
+    icon: <HugeiconsIcon icon={ApiIcon} strokeWidth={2} />,
+  },
+]
+
+const navSecondary = [
+  {
+    title: "Team",
+    url: "/dashboard/team",
+    icon: <HugeiconsIcon icon={GroupIcon} strokeWidth={2} />,
+  },
+  {
+    title: "Settings",
+    url: "/dashboard/settings",
+    icon: <HugeiconsIcon icon={Settings05Icon} strokeWidth={2} />,
+  },
+  {
+    title: "Documentation",
+    url: "/dashboard/api/docs",
+    icon: <HugeiconsIcon icon={BookOpen02Icon} strokeWidth={2} />,
+  },
+  {
+    title: "Support",
+    url: "#",
+    icon: <HugeiconsIcon icon={HelpCircleIcon} strokeWidth={2} />,
+  },
+]
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data } = useBots({ page_size: 4 })
+  const bots =
+    data?.results.map((b) => ({
+      name: b.name,
+      url: `/dashboard/bots/${b.id}`,
+      icon: <HugeiconsIcon icon={Robot01Icon} strokeWidth={2} />,
+    })) ?? []
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<a href="/dashboard" />}>
-              <Image
-                src="/fomobot-logo.png"
-                alt="Fomobot logo"
-                width={32}
-                height={35}
-              />
-              <div className="grid flex-1 text-start text-sm leading-tight">
-                <span className="truncate font-semibold">Fomobot</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  Workspace
-                </span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <OrgSwitcher />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.bots} label="Your bots" />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} label="Platform" />
+        <NavMain items={navProduct} label="Product" />
+        {bots.length > 0 && <NavProjects projects={bots} label="Your bots" />}
+        <NavMain items={navDeveloper} label="Developer" />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   )

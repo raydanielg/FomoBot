@@ -1,5 +1,7 @@
 import { AppSidebar } from "@/components/app-sidebar"
+import { CommandMenu } from "@/components/command-menu"
 import { HeaderActions } from "@/components/header-actions"
+import { RequireAuth } from "@/components/require-auth"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,7 +25,8 @@ export function DashboardShell({
   children: React.ReactNode
 }) {
   return (
-    <SidebarProvider>
+    <RequireAuth>
+      <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2">
@@ -45,10 +48,14 @@ export function DashboardShell({
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+          <div className="ms-auto flex items-center">
+            <CommandMenu />
+          </div>
           <HeaderActions />
         </header>
         {children}
       </SidebarInset>
-    </SidebarProvider>
+      </SidebarProvider>
+    </RequireAuth>
   )
 }

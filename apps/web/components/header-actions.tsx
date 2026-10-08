@@ -9,16 +9,18 @@ import {
   BubbleChatIcon,
   CheckmarkBadgeIcon,
   CreditCardIcon,
-  Megaphone01Icon,
   NotificationIcon,
   Robot01Icon,
   SparklesIcon,
   LogoutIcon,
+  WebhookIcon,
+  Key01Icon,
 } from "@hugeicons/core-free-icons"
 
 import {
   Avatar,
   AvatarFallback,
+  AvatarImage,
 } from "@workspace/ui/components/avatar"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -32,51 +34,28 @@ import {
 } from "@workspace/ui/components/dropdown-menu"
 import { cn } from "@workspace/ui/lib/utils"
 
-const user = {
-  name: "Ezra",
-  email: "ezra@fomobot.com",
+import { useAuth } from "@/lib/auth"
+import { timeAgo, initials } from "@/lib/format"
+import { useNotifications, useNotificationMutations, useUnreadCount } from "@/hooks/api"
+import type { AppNotification } from "@/types/api"
+
+const TYPE_ICONS: Record<string, typeof Robot01Icon> = {
+  "bot.connected": Robot01Icon,
+  "bot.disconnected": Robot01Icon,
+  "webhook.failed": WebhookIcon,
+  "api_key.created": Key01Icon,
+  security: CheckmarkBadgeIcon,
+  system: BellIcon,
 }
 
-const notifications = [
-  {
-    icon: BubbleChatIcon,
-    title: "New conversation",
-    description: "Amina Juma started a chat on WhatsApp",
-    time: "2m ago",
-    unread: true,
-  },
-  {
-    icon: Robot01Icon,
-    title: "Bot handled 12 chats",
-    description: "Support Bot resolved chats while you were away",
-    time: "26m ago",
-    unread: true,
-  },
-  {
-    icon: Megaphone01Icon,
-    title: "Broadcast delivered",
-    description: "\"Weekend offer\" reached 1,240 contacts",
-    time: "1h ago",
-    unread: true,
-  },
-  {
-    icon: CreditCardIcon,
-    title: "Invoice paid",
-    description: "Pro plan — $29.00 charged successfully",
-    time: "Yesterday",
-    unread: false,
-  },
-]
-
 export function HeaderActions() {
-  const [items, setItems] = React.useState(notifications)
-  const unreadCount = items.filter((n) => n.unread).length
-  const initials = user.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase()
+  const { user, logout } = useAuth()
+  const notifications = useNotifications({ page_size: 8 })
+  const unread = useUnreadCount()
+  const mutations = useNotificationMutations()
+
+  const items = notifications.data?.results ?? []
+  const name = user?.full_name || user?.email || "Account"
 
   return (
     <div className="ms-auto flex items-center gap-1 px-4">
@@ -92,9 +71,9 @@ export function HeaderActions() {
           }
         >
           <HugeiconsIcon icon={BellIcon} strokeWidth={2} />
-          {unreadCount > 0 && (
+          {(unread.data?.count ?? 0) > 0 && (
             <span className="absolute end-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
-              {unreadCount}
+              {unread.data!.count > 9 ? "9+" : unread.data!.count}
             </span>
           )}
         </DropdownMenuTrigger>
@@ -103,54 +82,53 @@ export function HeaderActions() {
             <span className="font-medium">Notifications</span>
             <button
               type="button"
-              onClick={() =>
-                setItems((prev) => prev.map((n) => ({ ...n, unread: false })))
-              }
+              onClick={() => mutations.markAllRead.mutate()}
               className="text-xs font-normal text-muted-foreground transition-colors hover:text-foreground"
             >
               Mark all read
             </button>
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="my-0" />
-          {items.map((n) => (
-            <DropdownMenuItem
-              key={n.title}
-              className="flex items-start gap-3 px-4 py-3"
-            >
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <HugeiconsIcon
-                  icon={n.icon}
-                  strokeWidth={2}
-                  className="size-4 text-primary-foreground"
-                />
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "truncate text-sm",
-                      n.unread && "font-medium"
-                    )}
-                  >
-                    {n.title}
-                  </span>
-                  {n.unread && (
-                    <span className="size-1.5 shrink-0 rounded-full bg-primary" />
-                  )}
-                </div>
-                <span className="truncate text-xs text-muted-foreground">
-                  {n.description}
-                </span>
-                <span className="text-xs text-muted-foreground/70">
-                  {n.time}
-                </span>
-              </div>
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator className="my-0" />
-          <DropdownMenuItem className="justify-center py-2.5 text-sm text-muted-foreground">
-            View all notifications
-          </DropdownMenuItem>
+          {items.length === 0 ? (
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+              You&apos;re all caught up.
+            </p>
+          ) : (
+            items.map((n: AppNotification) => {
+              const isUnread = !n.read_at
+              return (
+                <DropdownMenuItem
+                  key={n.id}
+                  className="flex items-start gap-3 px-4 py-3"
+                  onClick={() => isUnread && mutations.markRead.mutate(n.id)}
+                >
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <HugeiconsIcon
+                      icon={TYPE_ICONS[n.type] ?? BellIcon}
+                      strokeWidth={2}
+                      className="size-4 text-primary-foreground"
+                    />
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className={cn("truncate text-sm", isUnread && "font-medium")}>
+                        {n.title}
+                      </span>
+                      {isUnread && (
+                        <span className="size-1.5 shrink-0 rounded-full bg-primary" />
+                      )}
+                    </div>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {n.body}
+                    </span>
+                    <span className="text-xs text-muted-foreground/70">
+                      {timeAgo(n.created_at)} ago
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              )
+            })
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -166,7 +144,8 @@ export function HeaderActions() {
           }
         >
           <Avatar className="size-8">
-            <AvatarFallback>{initials}</AvatarFallback>
+            <AvatarImage src={user?.avatar_url ?? undefined} alt={name} />
+            <AvatarFallback>{initials(name)}</AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -178,12 +157,13 @@ export function HeaderActions() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2.5 px-2 py-2 text-start text-sm">
                 <Avatar className="size-9">
-                  <AvatarFallback>{initials}</AvatarFallback>
+                  <AvatarImage src={user?.avatar_url ?? undefined} alt={name} />
+                  <AvatarFallback>{initials(name)}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-start leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
+                  <span className="truncate font-medium">{name}</span>
                   <span className="truncate text-xs text-muted-foreground">
-                    {user.email}
+                    {user?.email}
                   </span>
                 </div>
               </div>
@@ -191,28 +171,28 @@ export function HeaderActions() {
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/dashboard/settings" />}>
               <HugeiconsIcon icon={SparklesIcon} strokeWidth={2} />
-              Upgrade to Pro
+              Upgrade plan
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/dashboard/settings" />}>
               <HugeiconsIcon icon={CheckmarkBadgeIcon} strokeWidth={2} />
               Account
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/dashboard/settings" />}>
               <HugeiconsIcon icon={CreditCardIcon} strokeWidth={2} />
               Billing
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/dashboard/settings" />}>
               <HugeiconsIcon icon={NotificationIcon} strokeWidth={2} />
               Notifications
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem render={<Link href="/login" />}>
+          <DropdownMenuItem onClick={() => void logout()}>
             <HugeiconsIcon icon={LogoutIcon} strokeWidth={2} />
             Log out
           </DropdownMenuItem>
