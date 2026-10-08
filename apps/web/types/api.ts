@@ -97,6 +97,7 @@ export interface QRPayload {
   state: string
   qr: string
   expires_at: string
+  provider?: string
 }
 
 export interface Contact {

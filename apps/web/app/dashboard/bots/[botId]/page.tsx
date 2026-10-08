@@ -85,6 +85,22 @@ export default function BotDetailPage() {
     }
   }, [status.data?.session_state])
 
+  // Keep the QR fresh — real providers rotate the code every ~20s, so a
+  // stale QR always shows "invalid QR code" in the WhatsApp scanner.
+  React.useEffect(() => {
+    if (state !== "qr_required") return
+    const refresh = async () => {
+      try {
+        const payload = await botsApi.qr(botId)
+        if (payload.qr) setQr(payload)
+      } catch {
+        /* keep the last QR on transient errors */
+      }
+    }
+    const t = setInterval(refresh, 12_000)
+    return () => clearInterval(t)
+  }, [state, botId])
+
   async function handleConnect() {
     setBusy("connect")
     try {
@@ -223,24 +239,26 @@ export default function BotDetailPage() {
                         Refresh QR
                       </button>
                     </div>
-                    <button
-                      type="button"
-                      className="mt-2 text-xs text-muted-foreground underline underline-offset-4"
-                      onClick={() =>
-                        mutations.simulateScan.mutate(
-                          { id: botId },
-                          {
-                            onSuccess: () => {
-                              toast.success("Scan simulated — connecting…")
-                              status.refetch()
-                            },
-                            onError: (e) => toast.error(errorMessage(e)),
-                          }
-                        )
-                      }
-                    >
-                      Dev: simulate scan
-                    </button>
+                    {(qr?.provider ?? "mock") === "mock" && (
+                      <button
+                        type="button"
+                        className="mt-2 text-xs text-muted-foreground underline underline-offset-4"
+                        onClick={() =>
+                          mutations.simulateScan.mutate(
+                            { id: botId },
+                            {
+                              onSuccess: () => {
+                                toast.success("Scan simulated — connecting…")
+                                status.refetch()
+                              },
+                              onError: (e) => toast.error(errorMessage(e)),
+                            }
+                          )
+                        }
+                      >
+                        Dev: simulate scan
+                      </button>
+                    )}
                   </div>
                 </div>
               ) : state === "connected" ? (
