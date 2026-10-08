@@ -87,17 +87,21 @@ export default function BotDetailPage() {
 
   // Keep the QR fresh — real providers rotate the code every ~20s, so a
   // stale QR always shows "invalid QR code" in the WhatsApp scanner.
+  // Poll while connecting too: the provider may still be dialling when
+  // the connect request returns, so the first poll fetches the QR as
+  // soon as it exists.
   React.useEffect(() => {
-    if (state !== "qr_required") return
+    if (state !== "connecting" && state !== "qr_required") return
     const refresh = async () => {
       try {
         const payload = await botsApi.qr(botId)
-        if (payload.qr) setQr(payload)
+        if (payload.qr || payload.state !== "connecting") setQr(payload)
       } catch {
         /* keep the last QR on transient errors */
       }
     }
-    const t = setInterval(refresh, 12_000)
+    refresh()
+    const t = setInterval(refresh, 10_000)
     return () => clearInterval(t)
   }, [state, botId])
 
