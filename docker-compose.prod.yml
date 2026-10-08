@@ -1,0 +1,18 @@
+# FomoBot frontend — production compose (optional; the image can also be run
+# by an existing container manager). Publishes one host port only.
+#
+#   API_URL=https://api.<VPS_IP>.sslip.io \
+#   docker compose -p fomobot-web -f docker-compose.prod.yml up -d --build
+name: fomobot-web
+
+services:
+  web:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_URL: ${API_URL}
+    ports:
+      - "${WEB_PORT:-3100}:3000"
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production

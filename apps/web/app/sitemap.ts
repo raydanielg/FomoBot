@@ -16,7 +16,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/security", priority: 0.4 },
     { path: "/privacy", priority: 0.3 },
     { path: "/terms", priority: 0.3 },
-    { path: "/login", priority: 0.2 },
   ].map((p) => ({
     url: `${seoConfig.url}${p.path}`,
     lastModified: now,
