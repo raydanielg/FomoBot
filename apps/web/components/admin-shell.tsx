@@ -23,6 +23,7 @@ import {
   MailCheckIcon,
   MessageLock01Icon,
   NotificationIcon,
+  SearchIcon,
   SecurityCheckIcon as ProtectionIcon,
   Robot01Icon,
   SecurityCheckIcon,
@@ -112,6 +113,7 @@ const NAV: { label: string; items: { title: string; href: string; icon: typeof H
     items: [
       { title: "Plans & limits", href: "/admin/platform/plans", icon: Task01Icon },
       { title: "Feature flags", href: "/admin/platform/feature-flags", icon: File01Icon },
+      { title: "SEO", href: "/admin/seo", icon: SearchIcon },
       { title: "Queues", href: "/admin/system/queues", icon: WifiConnected01Icon },
     ],
   },

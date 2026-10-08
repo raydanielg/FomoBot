@@ -18,11 +18,43 @@ import {
 } from "@hugeicons/core-free-icons"
 import { Button } from "@workspace/ui/components/button"
 
-export const metadata = {
-  title: "Fomobot — WhatsApp infrastructure for developers",
+import { JsonLd, faqSchema, organizationSchema, softwareSchema, websiteSchema } from "@/lib/seo/schemas"
+import { pageSeo } from "@/lib/seo/metadata"
+
+export const metadata = pageSeo({
+  title: "Fomobot — WhatsApp Bots, Automation & Messaging API",
   description:
     "Connect your WhatsApp account, expose a developer API, automate conversations and integrate WhatsApp into your applications.",
-}
+  path: "/",
+  keywords: ["whatsapp bot", "whatsapp automation", "whatsapp api", "whatsapp messaging api"],
+})
+
+const homeFaqs = [
+  {
+    question: "What is FomoBot?",
+    answer: "FomoBot is WhatsApp infrastructure for developers and businesses — connect a WhatsApp number once, then automate conversations, send messages through a REST API, receive webhooks and manage everything in a shared team inbox.",
+  },
+  {
+    question: "How do I connect WhatsApp?",
+    answer: "Create a bot, open its detail page and click Connect WhatsApp — a QR code appears that you scan with the phone that owns the number, like WhatsApp Web. The session persists on our servers.",
+  },
+  {
+    question: "Does the session stay connected?",
+    answer: "Yes — sessions persist server-side and reconnect automatically. If WhatsApp drops, you get a notification and the bot status changes to reconnecting or error.",
+  },
+  {
+    question: "Can I use the API?",
+    answer: "Yes — generate scoped API keys (messages:write, contacts:read, etc.) and call documented REST endpoints. An in-app playground and OpenAPI schema are included.",
+  },
+  {
+    question: "Do you support webhooks?",
+    answer: "Yes — subscribe to 14 event types (message.received, delivered, read, bot.connected, ...) with signed payloads, retries and a full delivery log.",
+  },
+  {
+    question: "Is FomoBot free?",
+    answer: "Yes, free while in beta — unlimited bots, messages and team members. Early users keep a generous free tier when paid plans launch.",
+  },
+]
 
 const steps = [
   {
@@ -59,6 +91,10 @@ const features = [
 export default function HomePage() {
   return (
     <div className="min-h-svh bg-background text-foreground">
+      <JsonLd data={organizationSchema()} />
+      <JsonLd data={websiteSchema()} />
+      <JsonLd data={softwareSchema()} />
+      <JsonLd data={faqSchema(homeFaqs)} />
       {/* ---- Hero ---- */}
       <section className="px-3 pt-3 md:px-5 md:pt-5">
         <div className="relative mx-auto max-w-[1400px] overflow-hidden rounded-[2rem]">
@@ -289,7 +325,54 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="pricing" className="px-3 pb-5 pt-16 md:px-5">
+        <section className="border-t border-border">
+          <div className="mx-auto max-w-6xl px-6 py-16">
+            <h2 className="text-center text-xl font-semibold tracking-tight">
+              Explore FomoBot
+            </h2>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ["WhatsApp bot builder", "/whatsapp-bot", "Create persistent WhatsApp sessions"],
+                ["Automation platform", "/whatsapp-automation", "Rules that reply for you"],
+                ["Developer API", "/whatsapp-api-for-developers", "REST + webhooks + docs"],
+                ["OTP verification", "/whatsapp-otp", "Hashed, rate-limited codes"],
+                ["Customer support", "/whatsapp-customer-support", "Bot + human inbox"],
+                ["Notifications", "/whatsapp-notifications", "Transactional messages"],
+                ["Ecommerce", "/solutions/ecommerce", "Orders and delivery updates"],
+                ["Webhooks", "/whatsapp-webhooks", "Signed events, retries, logs"],
+              ].map(([title, href, text]) => (
+                <Link
+                  key={href}
+                  href={href!}
+                  className="group rounded-xl border border-border p-4 transition-colors hover:bg-muted/40"
+                >
+                  <p className="text-sm font-medium group-hover:underline">{title}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{text}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-border">
+          <div className="mx-auto max-w-3xl px-6 py-16">
+            <h2 className="text-center text-xl font-semibold tracking-tight">
+              Frequently asked questions
+            </h2>
+            <dl className="mt-10 flex flex-col gap-8">
+              {homeFaqs.map((f) => (
+                <div key={f.question}>
+                  <dt className="text-sm font-medium">{f.question}</dt>
+                  <dd className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                    {f.answer}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
+
+        <section id="pricing" className="px-3 pb-5 pt-8 md:px-5">
           <div className="relative mx-auto max-w-[1400px] overflow-hidden rounded-[2rem]">
             <Image
               src="/hero-sky.jpg"
@@ -364,28 +447,30 @@ export default function HomePage() {
                 {
                   title: "Product",
                   links: [
-                    ["How it works", "#how"],
-                    ["Features", "#features"],
+                    ["WhatsApp bot", "/whatsapp-bot"],
+                    ["Automation", "/whatsapp-automation"],
                     ["Pricing", "#pricing"],
-                    ["Changelog", "#"],
+                    ["Customer support", "/whatsapp-customer-support"],
                   ],
                 },
                 {
                   title: "Developers",
                   links: [
-                    ["API docs", "/dashboard/api/docs"],
-                    ["Playground", "/dashboard/api/playground"],
-                    ["Webhooks", "#features"],
-                    ["Status", "#"],
+                    ["API docs", "/docs"],
+                    ["API overview", "/whatsapp-api"],
+                    ["Webhooks", "/whatsapp-webhooks"],
+                    ["OTP", "/whatsapp-otp"],
                   ],
                 },
                 {
                   title: "Company",
                   links: [
-                    ["Sign in", "/login"],
-                    ["Get started", "/signup"],
-                    ["Contact", "mailto:hello@fomobot.dev"],
-                    ["Privacy", "#"],
+                    ["About", "/about"],
+                    ["Contact", "/contact"],
+                    ["Security", "/security"],
+                    ["Privacy", "/privacy"],
+                    ["Terms", "/terms"],
+                    ["Blog", "/blog"],
                   ],
                 },
               ].map((col) => (
