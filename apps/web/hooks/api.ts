@@ -82,6 +82,10 @@ export function useBotMutations() {
       mutationFn: botsApi.reconnect,
       onSuccess: () => invalidate("bots"),
     }),
+    logout: useMutation({
+      mutationFn: botsApi.logout,
+      onSuccess: () => invalidate("bots"),
+    }),
     simulateScan: useMutation({ mutationFn: ({ id, phone }: { id: string; phone?: string }) => botsApi.simulateScan(id, phone) }),
   }
 }

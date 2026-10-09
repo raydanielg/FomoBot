@@ -11,7 +11,9 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Alert02Icon,
   CheckmarkCircle02Icon,
+  CheckIcon,
   Loading03Icon,
+  Logout01Icon,
   Refresh01Icon,
   Robot01Icon,
   Settings05Icon,
@@ -27,6 +29,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@workspace/ui/components/alert-dialog"
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -45,6 +52,69 @@ import { errorMessage } from "@/lib/api/client"
 import { botStatusMeta, timeAgo } from "@/lib/format"
 import { useBot, useBotMutations, useBotStatus } from "@/hooks/api"
 import type { QRPayload } from "@/types/api"
+
+const CONNECT_STEPS = ["Prepare", "Scan QR", "Linked"]
+
+function ConnectStepper({ state }: { state: string }) {
+  const activeIdx =
+    state === "connected" || state === "authenticated"
+      ? 3
+      : state === "qr_required"
+        ? 1
+        : 0
+  return (
+    <div className="flex items-center px-2 pb-1">
+      {CONNECT_STEPS.map((label, i) => {
+        const done = i < activeIdx
+        const active = i === activeIdx
+        return (
+          <React.Fragment key={label}>
+            <div className="flex flex-col items-center gap-1.5">
+              <span
+                className={cn(
+                  "flex size-6 items-center justify-center rounded-full text-[10px] font-semibold transition-colors",
+                  done
+                    ? "bg-primary text-primary-foreground"
+                    : active
+                      ? "border-2 border-primary text-primary"
+                      : "border border-border text-muted-foreground"
+                )}
+              >
+                {done ? (
+                  <HugeiconsIcon icon={CheckIcon} strokeWidth={2.5} className="size-3" />
+                ) : (
+                  i + 1
+                )}
+              </span>
+              <span
+                className={cn(
+                  "text-[10px] font-medium",
+                  done || active ? "text-foreground" : "text-muted-foreground"
+                )}
+              >
+                {label}
+              </span>
+            </div>
+            {i < CONNECT_STEPS.length - 1 && (
+              <div
+                className={cn(
+                  "mx-2 mb-5 h-px flex-1",
+                  i < activeIdx ? "bg-primary" : "bg-border"
+                )}
+              />
+            )}
+          </React.Fragment>
+        )
+      })}
+    </div>
+  )
+}
+
+function formatPhone(phone: string) {
+  const digits = phone.replace(/\D/g, "")
+  if (!digits) return "No number"
+  return `+${digits.replace(/(\d{3})(?=\d)/g, "$1 ")}`
+}
 
 function Countdown({ expiresAt }: { expiresAt: string }) {
   const [left, setLeft] = React.useState(0)
@@ -223,6 +293,9 @@ export default function BotDetailPage() {
                 Link a WhatsApp account to this bot.
               </CardDescription>
             </CardHeader>
+            {state !== "disconnected" && state !== "error" && state !== "logged_out" && (
+              <ConnectStepper state={state} />
+            )}
             <CardContent>
               {state === "qr_required" && qr?.qr ? (
                 <div className="flex flex-col items-center gap-4">
@@ -273,15 +346,53 @@ export default function BotDetailPage() {
                   </div>
                 </div>
               ) : state === "connected" ? (
-                <div className="flex flex-col items-center gap-3 py-6 text-center">
-                  <div className="flex size-14 items-center justify-center rounded-full bg-primary/15">
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-7 text-primary-foreground" />
+                <div className="flex flex-col items-center gap-4 py-4">
+                  <div className="relative">
+                    <Avatar className="size-16 ring-4 ring-primary/20">
+                      {status.data?.profile_pic_url ? (
+                        <AvatarImage src={status.data.profile_pic_url} alt="WhatsApp profile" />
+                      ) : null}
+                      <AvatarFallback className="bg-primary/10">
+                        <HugeiconsIcon icon={WhatsappIcon} strokeWidth={1.5} className="size-7 text-primary-foreground" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-card">
+                      <HugeiconsIcon icon={CheckIcon} strokeWidth={3} className="size-2.5 text-white" />
+                    </span>
                   </div>
-                  <div>
-                    <p className="font-medium">WhatsApp connected</p>
-                    <p className="mt-0.5 text-sm text-muted-foreground">
-                      {status.data?.phone_number || b.phone_number || "Session active"}
+                  <div className="space-y-0.5 text-center">
+                    <p className="font-semibold">
+                      {status.data?.display_name || "WhatsApp account"}
                     </p>
+                    <p className="text-sm tabular-nums text-muted-foreground">
+                      {formatPhone(status.data?.phone_number || b.phone_number || "")}
+                    </p>
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                      Connected{b.last_connected_at && ` · ${timeAgo(b.last_connected_at)} ago`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setConfirmDisconnect(true)}>
+                      Disconnect
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground"
+                      disabled={mutations.logout.isPending}
+                      onClick={() =>
+                        mutations.logout.mutate(botId, {
+                          onSuccess: () => {
+                            toast.success("Logged out of WhatsApp")
+                            status.refetch()
+                          },
+                          onError: (e) => toast.error(errorMessage(e)),
+                        })
+                      }
+                    >
+                      <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} className="size-3.5" />
+                      Log out
+                    </Button>
                   </div>
                 </div>
               ) : state === "connecting" || state === "authenticated" || state === "reconnecting" ? (

@@ -87,6 +87,8 @@ export interface BotStatus {
   connection_status: BotConnectionStatus
   session_state: string | null
   phone_number: string
+  display_name?: string
+  profile_pic_url?: string
   last_connected_at: string | null
   last_disconnected_at: string | null
   last_heartbeat_at: string | null
