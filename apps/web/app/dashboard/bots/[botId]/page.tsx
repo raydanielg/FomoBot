@@ -92,16 +92,23 @@ export default function BotDetailPage() {
   // soon as it exists.
   React.useEffect(() => {
     if (state !== "connecting" && state !== "qr_required") return
+    let failures = 0
     const refresh = async () => {
       try {
         const payload = await botsApi.qr(botId)
+        failures = 0
         if (payload.qr || payload.state !== "connecting") setQr(payload)
       } catch {
-        /* keep the last QR on transient errors */
+        failures += 1
+        // Persistent failures (e.g. provider logged out) → show the error
+        // state with a retry action instead of an endlessly stale QR.
+        if (failures >= 3) {
+          setQr({ state: "error", qr: "", expires_at: "" })
+        }
       }
     }
     refresh()
-    const t = setInterval(refresh, 10_000)
+    const t = setInterval(refresh, 15_000)
     return () => clearInterval(t)
   }, [state, botId])
 
